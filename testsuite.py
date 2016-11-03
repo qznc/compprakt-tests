@@ -32,5 +32,29 @@ def lex_test(name):
     return t
 
 lex_testfiles = [p for p in glob("lexer/*") if not p.endswith(".ref")]
-
 test.suite.make("lex", tests=map(lex_test, lex_testfiles))
+
+def step_parsetest(env):
+    """Command to execute as parsetest step"""
+    return execute(env, "%(compiler)s --parsetest %(testname)s" % env, timeout=60)
+
+def step_asttest(env):
+    """Command to execute as AST parsetest step"""
+    return execute(env, "%(compiler)s --print-ast %(testname)s" % env, timeout=60)
+
+def parse_test(name):
+    t = Test(name)
+    t.add_step("parsetest", step_parsetest, checks=[ check_retcode_zero ])
+    return t
+
+def ast_test(name):
+    t = Test(name)
+    t.add_step("AST test", step_asttest, checks=[
+        check_retcode_zero,
+        create_check_reference_output(name+".ref"),
+    ])
+    return t
+
+parse_testfiles = [p for p in glob("parser/*") if not p.endswith(".ref")]
+test.suite.make("parse", tests=map(parse_test, parse_testfiles))
+test.suite.make("ast", tests=map(ast_test, parse_testfiles))
