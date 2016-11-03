@@ -58,3 +58,15 @@ def ast_test(name):
 parse_testfiles = [p for p in glob("parser/*") if not p.endswith(".ref")]
 test.suite.make("parse", tests=map(parse_test, parse_testfiles))
 test.suite.make("ast", tests=map(ast_test, parse_testfiles))
+
+def step_semantictest(env):
+    """Command to execute as semantictest step"""
+    return execute(env, "%(compiler)s --check %(testname)s" % env, timeout=60)
+
+def semantic_test(name):
+    t = Test(name)
+    t.add_step("semantictest", step_semantictest, checks=[ check_retcode_zero ])
+    return t
+
+semantic_testfiles = [p for p in glob("semantic/*.java")]
+test.suite.make("semantic", tests=map(semantic_test, semantic_testfiles))
